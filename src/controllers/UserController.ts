@@ -18,8 +18,6 @@ import {
 dotenv.config();
 
 class UserController {
-  // Signup, signin, and verification related methods
-
   signup = async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
@@ -47,17 +45,13 @@ class UserController {
         status: "SUCCESS",
         message:
           "Check your inbox to verify your account in order to login into your account",
-        // data: {
-        //   userId: newUser._id,
-        //   email: newUser.email,
-        // },
       });
     } catch (error) {
       console.error("Error during signup:", error);
 
       res.status(500).json({
         status: "FAILED",
-        message: "An internal server error occurred",
+        message: "An internal server error occurred, please try again later",
       });
     }
   };
@@ -119,7 +113,7 @@ class UserController {
       if (!verificationEntry) {
         res.status(400).json({
           status: "FAILED",
-          isVerified: true,
+          isExpired: false,
           message:
             "This link is not valid now. Account has been verified already.",
         });
@@ -130,7 +124,7 @@ class UserController {
         await UserVerification.deleteOne({ userId });
         res.status(400).json({
           status: "FAILED",
-          isVerified: false,
+          isExpired: true,
           message: "Verification link has expired. But you can regenerate it.",
         });
         return;
@@ -144,7 +138,7 @@ class UserController {
       if (!isMatch) {
         res.status(400).json({
           status: "FAILED",
-          isVerified: false,
+          isExpired: true,
           message: "Invalid verification link",
         });
         return;
@@ -155,7 +149,7 @@ class UserController {
 
       res.status(200).json({
         status: "SUCCESS",
-        isVerified: true,
+        isExpired: false,
         message: "Email verified successfully! You can now log in.",
       });
     } catch (error) {
@@ -168,7 +162,7 @@ class UserController {
   };
 
   regenerateVerificationLink = async (req: Request, res: Response) => {
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     try {
       const user = await User.findOne({ _id: userId });
@@ -214,7 +208,7 @@ class UserController {
 
   private createVerificationEntry = async (user: any, res?: Response) => {
     const uniqueString = generateUniqueString(user._id.toString());
-    const verificationLink = `${process.env.BACKEND_BASE_URL}/user/verify/${user._id}/${uniqueString}`;
+    const verificationLink = `${process.env.FRONTEND_BASE_URL}/user/verify/${user._id}/${uniqueString}`;
 
     const hashedUniqueString = await hashString(uniqueString);
     const newVerification = new UserVerification({
@@ -236,10 +230,8 @@ class UserController {
     });
   };
 
-  // Password rest related methods
-
   requestResetPassword = async (req: Request, res: Response) => {
-    const { email, redirectUrl } = req.body;
+    const { email } = req.body;
 
     try {
       const user = await User.findOne({ email });
@@ -264,7 +256,7 @@ class UserController {
       const resetString = generateUniqueString(user._id.toString());
       await PasswordReset.deleteMany({ userId: user._id });
 
-      const resetPasswordLink = `${redirectUrl}/${user._id}/${resetString}`;
+      const resetPasswordLink = `${process.env.FRONTEND_BASE_URL}/reset-password/${user._id}/${resetString}`;
       const hashedResetPasswordString = await hashString(resetString);
 
       const newPasswordReset = new PasswordReset({
