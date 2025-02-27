@@ -1,8 +1,9 @@
-import { Response, Request, Router } from "express";
+import { authenticateToken } from "./../../middlewares/authentificateToken";
+import { Router } from "express";
 import OpenAiController from "../../controllers/OpenAiController";
 
 const router = Router();
 
-router.post("/generate-text", OpenAiController.generateText);
+router.post("/generate-text", authenticateToken, OpenAiController.generateText);
 
 export { router };

@@ -14,6 +14,7 @@ import {
   RESETING_PASSWORD_EXPIRATION_TIME,
   VERIFICATION_EXPIRATION_TIME,
 } from "../constants/verificationLink";
+import { generateAccessToken, generateRefreshToken } from "../utils/token";
 
 dotenv.config();
 
@@ -88,9 +89,19 @@ class UserController {
         return;
       }
 
+      const accessToken = generateAccessToken(user._id.toString());
+      const refreshToken = generateRefreshToken(user._id.toString());
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
       res.status(200).json({
         status: "SUCCESS",
         message: "Sign in is successfull",
+        accessToken,
         data: {
           userId: user._id,
         },
