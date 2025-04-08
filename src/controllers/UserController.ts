@@ -15,8 +15,13 @@ import {
   VERIFICATION_EXPIRATION_TIME,
 } from "../constants/verificationLink";
 import { generateAccessToken, generateRefreshToken } from "../utils/token";
+import { JwtPayload } from "jsonwebtoken";
 
 dotenv.config();
+
+interface AuthRequest extends Request {
+  user?: string | JwtPayload;
+}
 
 class UserController {
   signup = async (req: Request, res: Response) => {
@@ -372,6 +377,12 @@ class UserController {
         message: "An internal server error occurred",
       });
     }
+  };
+
+  authMe = async (req: AuthRequest, res: Response) => {
+    res.status(200).json({
+      user: req.user,
+    });
   };
 }
 
