@@ -400,6 +400,29 @@ class UserController {
       isAuthenticated: true,
     });
   };
+
+  logout = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        status: "FAILED",
+        message: "User not found",
+      });
+      return;
+    }
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
+      status: "SUCCESS",
+      message: "Logged out successfully",
+    });
+  };
 }
 
 export default new UserController();

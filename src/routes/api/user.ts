@@ -15,5 +15,6 @@ router.post(
 router.post("/request-reset-password", UserController.requestResetPassword);
 router.post("/reset-password", UserController.resetPassword);
 router.get("/auth/me", authenticateToken, UserController.authMe);
+router.get("/logout", authenticateToken, UserController.logout);
 
 export { router };
