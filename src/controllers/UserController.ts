@@ -15,12 +15,13 @@ import {
   VERIFICATION_EXPIRATION_TIME,
 } from "../constants/verificationLink";
 import { generateAccessToken, generateRefreshToken } from "../utils/token";
-import { JwtPayload } from "jsonwebtoken";
 
 dotenv.config();
 
 interface AuthRequest extends Request {
-  user?: string | JwtPayload;
+  user?: {
+    userId: string;
+  };
 }
 
 class UserController {
@@ -380,8 +381,23 @@ class UserController {
   };
 
   authMe = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(401).json({
+        status: "FAILED",
+        message: "User not found",
+      });
+      return;
+    }
+
+    const { password, ...userData } = user?.toObject() || {};
+
     res.status(200).json({
-      user: req.user,
+      user: userData,
+      isAuthenticated: true,
     });
   };
 }
