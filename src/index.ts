@@ -8,10 +8,16 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT;
+const CLIENT_URL = process.env.FRONTEND_BASE_URL;
 
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: CLIENT_URL,
+    credentials: true,
+  })
+);
 app.use(router);
 
 const start = async () => {

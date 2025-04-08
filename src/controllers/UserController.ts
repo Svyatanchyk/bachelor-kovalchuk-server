@@ -96,6 +96,7 @@ class UserController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
       res.status(200).json({
@@ -158,10 +159,21 @@ class UserController {
       await User.updateOne({ _id: userId }, { isVerified: true });
       await UserVerification.deleteOne({ userId });
 
+      const accessToken = generateAccessToken(userId.toString());
+      const refreshToken = generateRefreshToken(userId.toString());
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       res.status(200).json({
         status: "SUCCESS",
         isExpired: false,
         message: "Email verified successfully! You can now log in.",
+        accessToken,
       });
     } catch (error) {
       console.error(`Error during verification for userId: ${userId}`, error);
