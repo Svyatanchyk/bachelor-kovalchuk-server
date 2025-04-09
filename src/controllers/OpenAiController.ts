@@ -1,20 +1,21 @@
 import { Response, Request } from "express";
 import { openAi } from "../config/openai";
 import dotenv from "dotenv";
+import { generatePrompt } from "../utils/generatePrompt";
 dotenv.config();
 
 class OpenAiController {
   generateText = async (req: Request, res: Response) => {
     const { country, language, nText, vertical } = req.body;
 
-    const userMessage = `Generate ${nText} short variations of text for a minimalist creative in the field of ${vertical}, targeting an audience in ${country}. Use the following languages ${language}. The content should be 10-15 words long with a call to action. Do not include the country name in the text. The response should be a valid JSON object in the following format: {"1": "", ...} without code block`;
+    const prompt = generatePrompt(nText, vertical, country, language);
 
     try {
       const thread = await openAi.beta.threads.create();
 
       await openAi.beta.threads.messages.create(thread.id, {
         role: "user",
-        content: userMessage,
+        content: prompt,
       });
 
       const run = await openAi.beta.threads.runs.create(thread.id, {
