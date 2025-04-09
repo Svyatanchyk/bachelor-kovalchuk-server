@@ -8,6 +8,14 @@ class OpenAiController {
   generateText = async (req: Request, res: Response) => {
     const { country, language, nText, vertical } = req.body;
 
+    if (!country || !language || !nText || !vertical) {
+      res.status(400).json({
+        status: "FAILED",
+        message: "All parameters should be passed",
+      });
+      return;
+    }
+
     const prompt = generatePrompt(nText, vertical, country, language);
 
     try {
