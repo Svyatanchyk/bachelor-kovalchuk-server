@@ -15,6 +15,8 @@ import {
   VERIFICATION_EXPIRATION_TIME,
 } from "../constants/verificationLink";
 import { generateAccessToken, generateRefreshToken } from "../utils/token";
+import { generateNickName } from "../utils/generateNickName";
+import { ensureMonthlyBalance } from "../utils/ensureMonthlyBalance";
 
 dotenv.config();
 
@@ -40,9 +42,12 @@ class UserController {
       }
 
       const hashedPassword = await hashString(password);
+      const nickname = generateNickName();
+
       const newUser = new User({
         password: hashedPassword,
         email,
+        nickname,
       });
 
       await newUser.save();
@@ -95,6 +100,8 @@ class UserController {
         return;
       }
 
+      await ensureMonthlyBalance(user);
+
       const accessToken = generateAccessToken(user._id.toString());
       const refreshToken = generateRefreshToken(user._id.toString());
 
@@ -105,12 +112,17 @@ class UserController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
+      const { _id: userId, email: userEmail, tokenBalance, nickname } = user;
+
       res.status(200).json({
         status: "SUCCESS",
         message: "Sign in is successfull",
         accessToken,
         data: {
-          userId: user._id,
+          userId,
+          userEmail,
+          tokenBalance,
+          nickname,
         },
       });
     } catch (error) {
@@ -175,11 +187,27 @@ class UserController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
+      const user = await User.findById(userId);
+      if (!user) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "User not found",
+        });
+        return;
+      }
+      const { email: userEmail, tokenBalance, nickname } = user;
+
       res.status(200).json({
         status: "SUCCESS",
         isExpired: false,
         message: "Email verified successfully! You can now log in.",
         accessToken,
+        data: {
+          userId,
+          userEmail,
+          tokenBalance,
+          nickname,
+        },
       });
     } catch (error) {
       console.error(`Error during verification for userId: ${userId}`, error);

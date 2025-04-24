@@ -1,10 +1,13 @@
 import { Schema, model } from "mongoose";
 
-interface IUser {
+export interface IUser {
   email: string;
   password: string;
   isVerified: boolean;
+  nickname: string;
   role: Role;
+  tokenBalance: number;
+  tokensResetAt: Date;
 }
 
 enum Role {
@@ -23,8 +26,11 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
     },
+    nickname: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
     role: { type: String, enum: Object.values(Role), default: Role.user },
+    tokenBalance: { type: Number, default: 100 },
+    tokensResetAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
