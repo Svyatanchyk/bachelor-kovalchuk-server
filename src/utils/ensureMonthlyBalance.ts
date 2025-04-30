@@ -9,7 +9,7 @@ export async function ensureMonthlyBalance(user: HydratedDocument<IUser>) {
 
   if (now >= nextReset) {
     user.tokenBalance = 100;
-    user.tokensResetAt = now;
+    user.tokensResetAt = nextReset;
     await user.save();
   }
 }

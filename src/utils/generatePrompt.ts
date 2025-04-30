@@ -59,6 +59,7 @@ Call to action must be two words strictly in length. Example: "Learn more" etc.
 Title must be two or three words strictly in length. Example: "Dental implants" etc.
 if we have odd number of variations than priority has the language1.
 Do not include the country in variations. And do not apply the country as a languge.
+Do not put the dot in the end of the text. "!" are allowed.
 
 It is very important to follow all these instruction or it will extremely negatively effect the web site
 
