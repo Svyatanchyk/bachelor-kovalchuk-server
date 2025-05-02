@@ -2,11 +2,18 @@ import { Response, Request } from "express";
 import { openAi } from "../config/openai";
 import dotenv from "dotenv";
 import { generatePrompt } from "../utils/generatePrompt";
+import User from "../models/User";
 dotenv.config();
 
+interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+  };
+}
+
 class OpenAiController {
-  generateText = async (req: Request, res: Response) => {
-    const { country, language, nText, vertical } = req.body;
+  generateText = async (req: AuthRequest, res: Response) => {
+    const { country, language, nText, vertical, price } = req.body;
 
     if (!country || !language || !nText || !vertical) {
       res.status(400).json({
@@ -47,9 +54,28 @@ class OpenAiController {
 
       const parsedValue = JSON.parse(assistantResponse.text.value);
 
+      const user = await User.findById(req.user?.userId);
+
+      if (!user) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "Unauthorized",
+        });
+        return;
+      }
+
+      const userUpdated = await User.findByIdAndUpdate(
+        req.user?.userId,
+        {
+          tokenBalance: user.tokenBalance - price,
+        },
+        { new: true }
+      );
+
       res.status(200).json({
         status: "SUCCESS",
         text: parsedValue,
+        tokenBalance: userUpdated?.tokenBalance,
       });
     } catch (error) {
       res.status(500).json({

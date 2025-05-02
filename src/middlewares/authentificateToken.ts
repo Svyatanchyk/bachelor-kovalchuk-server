@@ -21,6 +21,7 @@ export const authenticateToken = (
 
   try {
     const decodedUser = jwt.verify(token, accessTokenSecret) as JwtPayload;
+
     req.user = decodedUser;
     next();
   } catch (error) {
