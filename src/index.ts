@@ -12,10 +12,23 @@ const CLIENT_URL = process.env.FRONTEND_BASE_URL;
 
 app.use(cookieParser());
 app.use(express.json());
+const allowedOrigins = [
+  "https://generise.netlify.app",
+  "http://localhost:5173",
+];
+
+// CORS configuration
 app.use(
   cors({
-    origin: CLIENT_URL,
-    credentials: true,
+    origin: (origin, callback) => {
+      if (allowedOrigins.includes(origin!) || !origin) {
+        callback(null, true); // Allow the request
+      } else {
+        callback(new Error("Not allowed by CORS")); // Block the request
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
   })
 );
 app.use(router);
