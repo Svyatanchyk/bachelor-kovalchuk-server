@@ -12,12 +12,13 @@ const CLIENT_URL = process.env.FRONTEND_BASE_URL;
 
 app.use(cookieParser());
 app.use(express.json());
-app.use(
-  cors({
-    origin: CLIENT_URL,
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: "*", // Allow all origins
+  credentials: true, // Allow cookies and authentication headers if needed
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
+};
+
+app.use(cors(corsOptions));
 
 app.use(router);
 
