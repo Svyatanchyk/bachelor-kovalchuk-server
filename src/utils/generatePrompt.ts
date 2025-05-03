@@ -55,7 +55,7 @@ Or if you have like: 'Generate 3 creative variations in English, Spanish and Fre
   
 The number of variations must be exactly the same as the number of creatives you are asked to generate. For example, if you ask for 3 variations, the output must contain exactly 3 variations.
 
-Call to action must be two words strictly in length. Example: "Learn more" etc.
+Call to action must be two words strictly in length. Example: "Learn more", "Explore now" etc. IMPORTANT length of call to action should be no more than TWO words.
 Title must be two or three words strictly in length. Example: "Dental implants" etc.
 if we have odd number of variations than priority has the language1.
 Do not include the country in variations. And do not apply the country as a languge.
