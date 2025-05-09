@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { RequestHandler, Router } from "express";
 import UserController from "../../controllers/UserController";
 import { validateSignup } from "../../middlewares/validation";
 import { authenticateToken } from "../../middlewares/authentificateToken";
@@ -14,7 +14,15 @@ router.post(
 );
 router.post("/request-reset-password", UserController.requestResetPassword);
 router.post("/reset-password", UserController.resetPassword);
-router.get("/auth/me", authenticateToken, UserController.authMe);
-router.post("/logout", authenticateToken, UserController.logout);
+router.get(
+  "/auth/me",
+  authenticateToken,
+  UserController.authMe as RequestHandler
+);
+router.post(
+  "/logout",
+  authenticateToken,
+  UserController.logout as RequestHandler
+);
 
 export { router };

@@ -61,7 +61,13 @@ if we have odd number of variations than priority has the language1.
 Do not include the country in variations. And do not apply the country as a languge.
 Do not put the dot in the end of the text. "!" are allowed.
 
-It is very important to follow all these instruction or it will extremely negatively effect the web site
+It is very important to follow all these instruction or it will extremely negatively effect the web site.
+
+HERE ARE SOME RESTRICTIONS:
+Title length: MAX 15 symbols
+Some text : MAX 20 symbols
+Main message : MAX 25 symbols
+Call to action: MAX 12 symbols, avoid long words, max two words 
 
 Do not include any code blocks. Just provide the raw JSON object with the variations.`;
 

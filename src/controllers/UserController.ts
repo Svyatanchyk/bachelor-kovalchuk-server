@@ -33,10 +33,19 @@ class UserController {
 
       const user = await User.findOne({ email });
 
-      if (user) {
+      if (user && user.provider === "google") {
         res.status(400).json({
           status: "FAILED",
-          message: "User with the provided email already exists",
+          message:
+            "Аккаунт з такою поштою вже існує. Будьласка Увійдіть відповідним способом.",
+        });
+        return;
+      }
+
+      if (user && user.provider === "local") {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Аккаунт з такою поштую вже існує",
         });
         return;
       }
@@ -48,11 +57,13 @@ class UserController {
         password: hashedPassword,
         email,
         nickname,
+        provider: "local",
       });
 
       await newUser.save();
 
       await this.createVerificationEntry(newUser);
+
       res.status(201).json({
         status: "SUCCESS",
         message:
@@ -90,6 +101,14 @@ class UserController {
         return;
       }
 
+      if (user.provider === "google") {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Будьласка увійдіть через google",
+        });
+        return;
+      }
+
       const isMatch = await compareHashString(password, user.password);
 
       if (!isMatch) {
@@ -118,7 +137,7 @@ class UserController {
         status: "SUCCESS",
         message: "Sign in is successfull",
         accessToken,
-        data: {
+        user: {
           userId,
           userEmail,
           tokenBalance,
@@ -202,7 +221,7 @@ class UserController {
         isExpired: false,
         message: "Email verified successfully! You can now log in.",
         accessToken,
-        data: {
+        user: {
           userId,
           userEmail,
           tokenBalance,
@@ -268,6 +287,7 @@ class UserController {
     const verificationLink = `${process.env.FRONTEND_BASE_URL}/user/verify/${user._id}/${uniqueString}`;
 
     const hashedUniqueString = await hashString(uniqueString);
+
     const newVerification = new UserVerification({
       userId: user._id,
       uniqueString: hashedUniqueString,

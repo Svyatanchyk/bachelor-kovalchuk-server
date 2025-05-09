@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const ACCESS_TOKEN_EXPIRE_TIME = "1h";
+const ACCESS_TOKEN_EXPIRE_TIME = "3h";
 const REFRESH_TOKEN_EXPIRE_TIME = "7d";
 
 export const generateAccessToken = (userId: string) => {

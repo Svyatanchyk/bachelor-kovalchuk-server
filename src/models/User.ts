@@ -8,6 +8,8 @@ export interface IUser {
   role: Role;
   tokenBalance: number;
   tokensResetAt: Date;
+  googleId: string;
+  provider: "google" | "local";
 }
 
 enum Role {
@@ -24,13 +26,15 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
     nickname: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
     role: { type: String, enum: Object.values(Role), default: Role.user },
     tokenBalance: { type: Number, default: 100 },
     tokensResetAt: { type: Date, default: Date.now },
+    googleId: { type: String, required: false },
+    provider: { type: String, required: true },
   },
   { timestamps: true }
 );
