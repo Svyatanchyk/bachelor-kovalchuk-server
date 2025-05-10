@@ -13,19 +13,37 @@ interface AuthRequest extends Request {
 
 class OpenAiController {
   generateText = async (req: AuthRequest, res: Response) => {
-    const { country, language, nText, vertical, price } = req.body;
-
-    if (!country || !language || !nText || !vertical) {
-      res.status(400).json({
-        status: "FAILED",
-        message: "All parameters should be passed",
-      });
-      return;
-    }
-
-    const prompt = generatePrompt(nText, vertical, country, language);
-
     try {
+      const { country, language, nText, vertical, price } = req.body;
+
+      if (!country || !language || !nText || !vertical) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "All parameters should be passed",
+        });
+        return;
+      }
+
+      const isUser = await User.findById(req.user?.userId);
+
+      if (!isUser) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "Unauthorized",
+        });
+        return;
+      }
+
+      if (isUser.tokenBalance < price) {
+        res.status(403).json({
+          status: "FAILED",
+          message: "Forbidden: insufficient token balance",
+        });
+        return;
+      }
+
+      const prompt = generatePrompt(nText, vertical, country, language);
+
       const thread = await openAi.beta.threads.create();
 
       await openAi.beta.threads.messages.create(thread.id, {
@@ -59,23 +77,33 @@ class OpenAiController {
       if (!user) {
         res.status(401).json({
           status: "FAILED",
-          message: "Unauthorized",
+          message: "User not found",
         });
         return;
       }
 
-      const userUpdated = await User.findByIdAndUpdate(
-        req.user?.userId,
+      const updatedUser = await User.findOneAndUpdate(
         {
-          tokenBalance: user.tokenBalance - price,
+          _id: req.user?.userId,
+          tokenBalance: { $gte: price },
+        },
+        {
+          $inc: { tokenBalance: -price },
         },
         { new: true }
       );
 
+      if (!updatedUser) {
+        return res.status(403).json({
+          status: "FAILED",
+          message: "Forbidden: insufficient token balance",
+        });
+      }
+
       res.status(200).json({
         status: "SUCCESS",
         text: parsedValue,
-        tokenBalance: userUpdated?.tokenBalance,
+        tokenBalance: updatedUser?.tokenBalance,
       });
     } catch (error) {
       res.status(500).json({

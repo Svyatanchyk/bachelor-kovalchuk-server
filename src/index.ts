@@ -21,14 +21,13 @@ const corsOptions: CorsOptions = {
     ];
 
     if (allowedOrigins.includes(origin!) || !origin) {
-      // Allow requests from allowed origins or if no origin is provided (e.g., for local testing)
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // Allow credentials (cookies, HTTP authentication)
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 };
 
 // Apply the CORS configuration

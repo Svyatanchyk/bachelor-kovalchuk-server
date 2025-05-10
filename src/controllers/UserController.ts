@@ -471,6 +471,66 @@ class UserController {
       message: "Logged out successfully",
     });
   };
+
+  withdrawCredits = async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+      const { price } = req.body;
+
+      if (typeof price !== "number" || price <= 0) {
+        return res.status(400).json({
+          status: "FAILED",
+          message: "Invalid price",
+        });
+      }
+
+      if (!userId) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "User not found",
+        });
+        return;
+      }
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "User not found",
+        });
+        return;
+      }
+
+      const updatedUser = await User.findOneAndUpdate(
+        {
+          _id: userId,
+          tokenBalance: { $gte: price },
+        },
+        {
+          $inc: { tokenBalance: -price },
+        },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(403).json({
+          status: "FAILED",
+          message: "Forbidden: insufficient token balance",
+        });
+      }
+
+      res.status(200).json({
+        status: "SUCCESS",
+        tokenBalance: updatedUser?.tokenBalance,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "FAILED",
+      });
+      console.error("Error:", error);
+    }
+  };
 }
 
 export default new UserController();

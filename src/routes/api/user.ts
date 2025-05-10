@@ -24,5 +24,10 @@ router.post(
   authenticateToken,
   UserController.logout as RequestHandler
 );
+router.patch(
+  "/withdraw-credits",
+  authenticateToken,
+  UserController.withdrawCredits as RequestHandler
+);
 
 export { router };
