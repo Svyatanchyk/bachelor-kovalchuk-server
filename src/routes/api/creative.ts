@@ -1,13 +1,13 @@
-import { authenticateToken } from "./../../middlewares/authentificateToken";
 import { RequestHandler, Router } from "express";
-import OpenAiController from "../../controllers/OpenAiController";
+import CreativeController from "../../controllers/CreativeController";
+import { authenticateToken } from "../../middlewares/authentificateToken";
 
 const router = Router();
 
 router.post(
-  "/generate-text",
+  "/save",
   authenticateToken,
-  OpenAiController.generateText as RequestHandler
+  CreativeController.saveCreatives as RequestHandler
 );
 
 export { router };
