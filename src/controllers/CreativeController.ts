@@ -56,6 +56,38 @@ class CreativeController {
         .json({ error: "An error occurred while saving creatives" });
     }
   };
+
+  getCreatives = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(400).json({ error: "User not authenticated" });
+        return;
+      }
+
+      const creativeEntity = await Creative.findOne({ userId });
+
+      if (!creativeEntity) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Creatives not found",
+        });
+        return;
+      }
+
+      res.status(200).json({
+        status: "SUCCESS",
+        message: "Creatives fetched successfully",
+        creatives: creativeEntity.creatives,
+      });
+    } catch (error) {
+      console.error("Error fetching creatives:", error);
+      res
+        .status(500)
+        .json({ error: "An error occurred while fetching creatives" });
+    }
+  };
 }
 
 export default new CreativeController();

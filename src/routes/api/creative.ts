@@ -10,4 +10,10 @@ router.post(
   CreativeController.saveCreatives as RequestHandler
 );
 
+router.get(
+  "",
+  authenticateToken,
+  CreativeController.getCreatives as RequestHandler
+);
+
 export { router };
