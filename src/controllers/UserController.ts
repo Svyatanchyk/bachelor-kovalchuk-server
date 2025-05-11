@@ -17,6 +17,7 @@ import {
 import { generateAccessToken, generateRefreshToken } from "../utils/token";
 import { generateNickName } from "../utils/generateNickName";
 import { ensureMonthlyBalance } from "../utils/ensureMonthlyBalance";
+import Creative from "../models/Creatives";
 
 dotenv.config();
 
@@ -529,6 +530,35 @@ class UserController {
         status: "FAILED",
       });
       console.error("Error:", error);
+    }
+  };
+
+  deleteAccount = async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "User not authenticated",
+        });
+        return;
+      }
+
+      await Creative.deleteOne({ userId });
+
+      await User.findByIdAndDelete(userId);
+
+      return res.status(200).json({
+        status: "SUCCESS",
+        message: "Account and related data deleted successfully",
+      });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      return res.status(500).json({
+        status: "FAILED",
+        message: "Server error during account deletion",
+      });
     }
   };
 }

@@ -29,5 +29,10 @@ router.patch(
   authenticateToken,
   UserController.withdrawCredits as RequestHandler
 );
+router.delete(
+  "/delete",
+  authenticateToken,
+  UserController.deleteAccount as RequestHandler
+);
 
 export { router };
