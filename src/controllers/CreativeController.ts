@@ -134,6 +134,49 @@ class CreativeController {
       res.status(500).send("Error deleting creative");
     }
   };
+
+  deleteAllCreatives = async (
+    req: AuthRequest,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({ error: "User is not authenticated" });
+        return;
+      }
+
+      const creativeEntity = await Creative.findOne({ userId });
+
+      if (!creativeEntity) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Creatives not found",
+        });
+        return;
+      }
+
+      const deletedEntity = await Creative.findByIdAndDelete(
+        creativeEntity._id
+      );
+
+      if (deletedEntity) {
+        res.status(200).json({
+          status: "SUCCESS",
+          message: "All creatives deleted successfully",
+        });
+      } else {
+        res.status(404).json({
+          status: "FAILED",
+          message: "Creative entity not found for deletion",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Error deleting creatives");
+    }
+  };
 }
 
 export default new CreativeController();
