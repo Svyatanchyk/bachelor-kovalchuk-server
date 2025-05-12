@@ -16,4 +16,10 @@ router.get(
   CreativeController.getCreatives as RequestHandler
 );
 
+router.delete(
+  "/delete/:creativeId",
+  authenticateToken,
+  CreativeController.deleteCreative as RequestHandler
+);
+
 export { router };
