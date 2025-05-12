@@ -52,16 +52,18 @@ class GoogleAuthController {
         tokenBalance,
         nickname,
         role,
+        provider,
       } = user;
 
       res.status(200).json({
         message: "Logged in",
         user: {
           userId,
-          email,
+          email: userEmail,
           tokenBalance,
           nickname,
           role,
+          provider,
         },
         accessToken,
       });

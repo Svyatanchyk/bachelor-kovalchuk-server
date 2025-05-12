@@ -132,7 +132,13 @@ class UserController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      const { _id: userId, email: userEmail, tokenBalance, nickname } = user;
+      const {
+        _id: userId,
+        email: userEmail,
+        tokenBalance,
+        nickname,
+        provider,
+      } = user;
 
       res.status(200).json({
         status: "SUCCESS",
@@ -143,6 +149,7 @@ class UserController {
           userEmail,
           tokenBalance,
           nickname,
+          provider,
         },
       });
     } catch (error) {
@@ -215,7 +222,7 @@ class UserController {
         });
         return;
       }
-      const { email: userEmail, tokenBalance, nickname } = user;
+      const { email: userEmail, tokenBalance, nickname, provider } = user;
 
       res.status(200).json({
         status: "SUCCESS",
@@ -227,6 +234,7 @@ class UserController {
           userEmail,
           tokenBalance,
           nickname,
+          provider,
         },
       });
     } catch (error) {
@@ -438,6 +446,7 @@ class UserController {
       res.status(401).json({
         status: "FAILED",
         message: "User not found",
+        isAuthenticated: false,
       });
       return;
     }
@@ -561,6 +570,8 @@ class UserController {
       });
     }
   };
+
+
 }
 
 export default new UserController();
