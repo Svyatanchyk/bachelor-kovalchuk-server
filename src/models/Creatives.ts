@@ -12,8 +12,8 @@ const creativeSchema = new Schema({
     required: true,
   },
 
-  creatives: {
-    type: [Schema.Types.Mixed],
+  creative: {
+    type: Schema.Types.Mixed,
   },
 });
 
