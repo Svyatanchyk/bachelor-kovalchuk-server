@@ -7,7 +7,9 @@ const router = Router();
 router.post(
   "/create-invoice",
   authenticateToken,
-  PaymentController.createInvoice as RequestHandler
+  PaymentController.createPayment as RequestHandler
 );
+
+router.post("/monobank-webhook", PaymentController.webhook as RequestHandler);
 
 export { router };
