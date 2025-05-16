@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import axios from "axios";
 import dotenv from "dotenv";
-import { url } from "inspector";
 import User from "../models/User";
 
 dotenv.config();
@@ -18,6 +17,14 @@ class PaymentController {
   createPayment = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.userId;
     const { amount } = req.body;
+
+    if (!amount) {
+      res.status(400).json({
+        status: "FAILED",
+        message: "Amount is required",
+      });
+      return;
+    }
 
     const creditsPrice = Math.floor(
       PRICE_PER_CREDIT * Number(amount) * 100
