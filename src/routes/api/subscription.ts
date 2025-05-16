@@ -1,6 +1,7 @@
 import SubscriptionController from "../../controllers/SubscriptionController";
 import { authenticateToken } from "../../middlewares/authentificateToken";
 import { RequestHandler, Router } from "express";
+import "../../config/subscriptionExpirationCron";
 
 const router = Router();
 

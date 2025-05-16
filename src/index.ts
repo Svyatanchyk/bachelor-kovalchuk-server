@@ -4,7 +4,6 @@ import cors, { CorsOptions } from "cors";
 import dotenv from "dotenv";
 import { router } from "./routes/router";
 import cookieParser from "cookie-parser";
-
 dotenv.config();
 
 const app: Application = express();
@@ -17,7 +16,6 @@ const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       "http://localhost:5173",
-      "http://localhost:5174",
       "https://generise.netlify.app",
     ];
 
