@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Request, Response } from "express";
 import { Subscription } from "../models/Subscription";
+import User from "../models/User";
 
 interface AuthRequest extends Request {
   user?: {
@@ -21,7 +22,7 @@ class SubscriptionController {
           amount: SUBSCRIPION_PRICE * 100,
           ccy: 840,
           redirectUrl: process.env.FRONTEND_BASE_URL,
-          webhookUrl: `${process.env.SERVER_BASE_URL}/payment/monobank-subscription-webhook`,
+          webhookUrl: `${process.env.SERVER_BASE_URL}/subscription/monobank-webhook`,
           merchantPaymInfo: {
             reference: `TOPUP_${userId}_${Date.now()}`,
             destination: "Покупка підписки",
@@ -44,7 +45,7 @@ class SubscriptionController {
   };
 
   subscriptionWebhook = async (req: AuthRequest, res: Response) => {
-    const { invoiceId, status, reference } = req.body;
+    const { status, reference } = req.body;
 
     console.log(req.body);
 
@@ -81,13 +82,9 @@ class SubscriptionController {
         subscription.startDate = now;
         subscription.endDate = newEndDate;
 
-        const updatedSubscription = await subscription.save();
+        await subscription.save();
 
-        res.status(200).json({
-          status: "SUCCESS",
-          subscriptionStatus: "renewed",
-          subscriptionEnd: updatedSubscription.endDate,
-        });
+        res.status(200).send();
         return;
       } catch (error) {
         console.error("❌ Error updating user balance:", error);
@@ -104,6 +101,91 @@ class SubscriptionController {
     if (status === "failure") {
       console.log("❌ Payment failed");
       return res.sendStatus(200);
+    }
+  };
+
+  getUserSubscription = async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "Unauthorized",
+        });
+        return;
+      }
+
+      const userSub = await Subscription.findOne({ userId });
+
+      if (!userSub) {
+        res.status(200).json({
+          status: "SUCCESS",
+          subscription: null,
+        });
+        return;
+      }
+
+      res.status(200).json({
+        status: "success",
+        subscription: userSub,
+      });
+    } catch (error) {
+      console.error("❌ ", error);
+      res.status(500).json({
+        status: "FAILED",
+        message: "An error occured",
+      });
+    }
+  };
+
+  cancelSubscription = async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "Unauthorized: Missing user ID",
+        });
+        return;
+      }
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "Unauthorized: User not found",
+        });
+        return;
+      }
+
+      const deletedSubscription = await Subscription.findOneAndDelete({
+        userId,
+      });
+
+      if (!deletedSubscription) {
+        res.status(404).json({
+          status: "FAILED",
+          message: "No active subscription to cancel",
+        });
+        return;
+      }
+
+      return res.status(200).json({
+        status: "SUCCESS",
+        message: "Subscription cancelled successfully",
+      });
+    } catch (error) {
+      console.error("❌ Error cancelling subscription:", error);
+      res.status(500).json({
+        status: "FAILED",
+        message: "Server error during subscription cancellation",
+      });
+      return;
     }
   };
 }

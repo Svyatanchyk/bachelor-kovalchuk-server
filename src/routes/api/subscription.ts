@@ -15,4 +15,11 @@ router.post(
   SubscriptionController.subscriptionWebhook as RequestHandler
 );
 
+router.get("", SubscriptionController.getUserSubscription as RequestHandler);
+
+router.delete(
+  "/cancel",
+  SubscriptionController.cancelSubscription as RequestHandler
+);
+
 export { router };
