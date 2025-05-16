@@ -18,6 +18,7 @@ import { generateAccessToken, generateRefreshToken } from "../utils/token";
 import { generateNickName } from "../utils/generateNickName";
 import { ensureMonthlyBalance } from "../utils/ensureMonthlyBalance";
 import Creative from "../models/Creatives";
+import CreativeController from "../controllers/CreativeController";
 
 dotenv.config();
 
@@ -545,33 +546,58 @@ class UserController {
   deleteAccount = async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.userId;
+      const { password } = req.body;
 
       if (!userId) {
         res.status(401).json({
           status: "FAILED",
-          message: "User not authenticated",
+          message: "Unauthorized: Missing user ID",
         });
         return;
       }
 
-      await Creative.deleteOne({ userId });
+      const user = await User.findById(userId);
+
+      if (!user) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "User is not authorized",
+        });
+        return;
+      }
+
+      if (user.provider === "local") {
+        const isMatch = await compareHashString(password, user.password);
+        if (!isMatch) {
+          res.status(403).json({
+            status: "FAILED",
+            message: "Incorect password",
+          });
+          return;
+        }
+      }
+
+      const creatives = await Creative.find({ userId });
+
+      if (creatives.length) {
+        await CreativeController.deleteImagesFromS3(creatives);
+        await Creative.deleteMany({ userId });
+      }
 
       await User.findByIdAndDelete(userId);
 
-      return res.status(200).json({
+      res.status(200).json({
         status: "SUCCESS",
         message: "Account and related data deleted successfully",
       });
     } catch (error) {
       console.error("Delete account error:", error);
-      return res.status(500).json({
+      res.status(500).json({
         status: "FAILED",
         message: "Server error during account deletion",
       });
     }
   };
-
-
 }
 
 export default new UserController();

@@ -84,7 +84,7 @@ class CreativeController {
       const userId = req.user?.userId;
 
       if (!userId) {
-        res.status(400).json({ error: "User not authenticated" });
+        res.status(401).json({ error: "User not authorized" });
         return;
       }
 
@@ -183,6 +183,17 @@ class CreativeController {
         return;
       }
 
+      const creatives = await Creative.find({ userId });
+
+      if (!creatives.length) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "No creatives were found",
+        });
+        return;
+      }
+
+      await this.deleteImagesFromS3(creatives);
       const result = await Creative.deleteMany({ userId });
 
       if (result.deletedCount === 0) {
@@ -203,7 +214,7 @@ class CreativeController {
     }
   };
 
-  private uploadBase64ToS3 = async (base64String: string, fileName: string) => {
+  uploadBase64ToS3 = async (base64String: string, fileName: string) => {
     if (
       !base64String.startsWith("data:image/") ||
       !base64String.includes("base64,")
@@ -233,19 +244,57 @@ class CreativeController {
     }
   };
 
-  private deleteObjectFromS3 = async (objectKey: string) => {
+  deleteObjectFromS3 = async (objectKey: string) => {
     try {
-      console.log("Key: ", objectKey);
-
       const params = {
         Bucket: process.env.BUCKET_NAME!,
         Key: objectKey,
       };
 
       const data = await s3.deleteObject(params).promise();
-      console.log("Object deleted successfully:", data);
     } catch (error) {
       console.error("Error deleting object from S3:", error);
+    }
+  };
+
+  deleteImagesFromS3 = async (creatives: any[]) => {
+    try {
+      const mainImagePromises = creatives.map(async (crt: any) => {
+        const creativeImageUrl = crt.creative.image;
+        const extractKey = /(?:https:\/\/[a-zA-Z0-9.-]+\/)(.*)/;
+        const match = creativeImageUrl.match(extractKey);
+
+        if (match && match[1]) {
+          const objKey = match[1];
+          await this.deleteObjectFromS3(objKey);
+        }
+      });
+
+      const objectImagePromises = creatives.map(async (creative: any) => {
+        creative.creative.objects.map(async (obj: any) => {
+          if (obj.type === "Image") {
+            const extractKey = /(?:https:\/\/[a-zA-Z0-9.-]+\/)(.*)/;
+
+            const match = obj.src.match(extractKey);
+
+            if (match && match[1]) {
+              const objectKey = match[1];
+              try {
+                await this.deleteObjectFromS3(objectKey);
+              } catch (error) {
+                console.error(`Failed to delete image: ${objectKey}`, error);
+              }
+            } else {
+              console.warn("No valid object key found for image:", obj.src);
+            }
+          }
+        });
+      });
+
+      await Promise.all([...mainImagePromises, ...objectImagePromises]);
+    } catch (error) {
+      console.log("Something went wrong: ", error);
+      throw new Error("An error occured while deleting creatives");
     }
   };
 }

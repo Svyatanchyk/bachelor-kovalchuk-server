@@ -12,12 +12,12 @@ interface AuthRequest extends Request {
   };
 }
 
+const PRICE_PER_CREDIT = 0.012;
+
 class PaymentController {
   createPayment = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.userId;
     const { amount } = req.body;
-
-    const PRICE_PER_CREDIT = 0.012;
 
     const creditsPrice = Math.floor(
       PRICE_PER_CREDIT * Number(amount) * 100
