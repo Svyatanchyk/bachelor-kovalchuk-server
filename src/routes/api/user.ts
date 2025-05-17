@@ -7,6 +7,11 @@ const router = Router();
 
 router.post("/signup", validateSignup, UserController.signup);
 router.post("/signin", UserController.signin);
+router.patch(
+  "/update",
+  authenticateToken,
+  UserController.updateUser as RequestHandler
+);
 router.post("/verify/:userId/:uniqueString", UserController.verifySignup);
 router.post(
   "/regenerate/verification/:userId",

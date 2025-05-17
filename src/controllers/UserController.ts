@@ -162,6 +162,57 @@ class UserController {
     }
   };
 
+  updateUser = async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+      const { nickname } = req.body;
+
+      if (!nickname) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Nickname is required",
+        });
+        return;
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "User not found",
+          isAuthenticated: false,
+        });
+        return;
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { nickname },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Failed to update user",
+        });
+        return;
+      }
+
+      res.status(200).json({
+        status: "SUCCESS",
+        message: "User updated successfully",
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Update user error:", error);
+      res.status(500).json({
+        status: "FAILED",
+        message: "Internal server error",
+      });
+    }
+  };
+
   verifySignup = async (req: Request, res: Response) => {
     const { userId, uniqueString } = req.params;
 
