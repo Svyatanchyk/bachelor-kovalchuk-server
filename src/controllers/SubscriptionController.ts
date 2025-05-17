@@ -2,6 +2,7 @@ import axios from "axios";
 import { Request, Response } from "express";
 import { Subscription } from "../models/Subscription";
 import User from "../models/User";
+import { SUBSCRIPTIONS } from "../constants/prices";
 
 interface AuthRequest extends Request {
   user?: {
@@ -12,19 +13,38 @@ interface AuthRequest extends Request {
 class SubscriptionController {
   createSubscription = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.userId;
+    const { subscriptionType } = req.body;
 
-    const SUBSCRIPION_PRICE = 49;
+    if (!subscriptionType) {
+      res.status(400).json({
+        status: "FAILED",
+        message: "Subscription type is required",
+      });
+      return;
+    }
+
+    const subscription = SUBSCRIPTIONS.find(
+      (sub) => sub.type === subscriptionType
+    );
+
+    if (!subscription) {
+      res.status(400).json({
+        status: "FAILED",
+        message: "Subscription type is incorect",
+      });
+      return;
+    }
 
     try {
       const response = await axios.post(
         "https://api.monobank.ua/api/merchant/invoice/create",
         {
-          amount: SUBSCRIPION_PRICE * 100,
+          amount: subscription?.price * 100,
           ccy: 840,
           redirectUrl: process.env.FRONTEND_BASE_URL,
           webhookUrl: `${process.env.SERVER_BASE_URL}/subscription/monobank-webhook`,
           merchantPaymInfo: {
-            reference: `TOPUP_${userId}_${Date.now()}`,
+            reference: `TOPUP_${userId}_${Date.now()}_${subscription.type}`,
             destination: "Покупка підписки",
           },
           validity: 3600,
@@ -37,7 +57,7 @@ class SubscriptionController {
         }
       );
 
-      res.json({ url: response.data.pageUrl });
+      res.status(200).json({ url: response.data.pageUrl });
     } catch (error) {
       console.error("Monobank error", error);
       res.status(500).send("Payment error");
@@ -47,10 +67,9 @@ class SubscriptionController {
   subscriptionWebhook = async (req: AuthRequest, res: Response) => {
     const { status, reference } = req.body;
 
-    console.log(req.body);
-
     if (status === "success") {
       const userId = reference.split("_")[1];
+      const subscriptionType = reference.split("_")[3];
 
       try {
         const subscription = await Subscription.findOne({ userId });
@@ -59,9 +78,16 @@ class SubscriptionController {
           const newSubscription = new Subscription({
             status: "active",
             userId,
+            subType: subscriptionType,
           });
 
           const savedSubscription = await newSubscription.save();
+
+          await User.findByIdAndUpdate(
+            userId,
+            { $inc: { tokenBalance: 500 } },
+            { new: true }
+          );
 
           res.status(200).json({
             status: "SUCCESS",
@@ -83,6 +109,11 @@ class SubscriptionController {
         subscription.endDate = newEndDate;
 
         await subscription.save();
+        await User.findByIdAndUpdate(
+          userId,
+          { $inc: { tokenBalance: 500 } },
+          { new: true }
+        );
 
         res.status(200).send();
         return;
@@ -129,7 +160,7 @@ class SubscriptionController {
       }
 
       res.status(200).json({
-        status: "success",
+        status: "SUCCESS",
         subscription: userSub,
       });
     } catch (error) {
@@ -144,6 +175,7 @@ class SubscriptionController {
   cancelSubscription = async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.userId;
+      console.log("UserId", userId);
 
       if (!userId) {
         res.status(401).json({

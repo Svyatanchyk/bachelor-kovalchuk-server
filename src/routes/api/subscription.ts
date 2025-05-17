@@ -16,10 +16,15 @@ router.post(
   SubscriptionController.subscriptionWebhook as RequestHandler
 );
 
-router.get("", SubscriptionController.getUserSubscription as RequestHandler);
+router.get(
+  "",
+  authenticateToken,
+  SubscriptionController.getUserSubscription as RequestHandler
+);
 
 router.delete(
   "/cancel",
+  authenticateToken,
   SubscriptionController.cancelSubscription as RequestHandler
 );
 
