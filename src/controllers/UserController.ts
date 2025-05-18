@@ -213,6 +213,66 @@ class UserController {
     }
   };
 
+  changeUserPassword = async (req: AuthRequest, res: Response) => {
+    const { newPassword, oldPassword } = req.body;
+    const userId = req.user?.userId;
+
+    try {
+      if (!userId) {
+        res.status(401).json({
+          status: "FAILED",
+          message: "User is not authorized",
+        });
+        return;
+      }
+
+      if (!newPassword || !oldPassword) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "New password and old password fields are required",
+        });
+        return;
+      }
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        res.status(404).json({
+          status: "FAILED",
+          message: "User was not found",
+        });
+        return;
+      }
+
+      const userHashPassword = user.password;
+      const isMatch = await compareHashString(oldPassword, userHashPassword);
+
+      if (!isMatch) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Incorrect input password",
+        });
+        return;
+      }
+
+      const hashedPassword = await hashString(newPassword);
+
+      user.password = hashedPassword;
+      await user.save();
+
+      res.status(200).json({
+        status: "SUCCESS",
+        message: "User password has been updated successfully",
+      });
+    } catch (error) {
+      console.error("Error during changing user password: ", error);
+      res.status(500).json({
+        status: "FAILED",
+        message: "An internal server error occurred. Please try again later.",
+      });
+    }
+  };
+
   verifySignup = async (req: Request, res: Response) => {
     const { userId, uniqueString } = req.params;
 

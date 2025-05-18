@@ -12,6 +12,11 @@ router.patch(
   authenticateToken,
   UserController.updateUser as RequestHandler
 );
+router.patch(
+  "/changePassword",
+  authenticateToken,
+  UserController.changeUserPassword as RequestHandler
+);
 router.post("/verify/:userId/:uniqueString", UserController.verifySignup);
 router.post(
   "/regenerate/verification/:userId",
