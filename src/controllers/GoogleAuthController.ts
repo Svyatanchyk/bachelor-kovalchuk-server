@@ -1,34 +1,57 @@
 import { Request, Response } from "express";
 import User from "../models/User";
-import { OAuth2Client } from "google-auth-library";
 import { generateAccessToken, generateRefreshToken } from "../utils/token";
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID!);
+import axios from "axios";
 
 class GoogleAuthController {
-  auth = async (req: Request, res: Response) => {
-    const { idToken } = req.body;
+  authCode = async (req: Request, res: Response) => {
+    const { code } = req.body;
+
+    console.log("Code: ", code);
+
+    if (!code) {
+      res.status(400).json({ error: "Missing authorization code" });
+      return;
+    }
 
     try {
-      const ticket = await client.verifyIdToken({
-        idToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
+      const tokenResponse = await axios.post(
+        "https://oauth2.googleapis.com/token",
+        null,
+        {
+          params: {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            grant_type: "authorization_code",
+          },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
-      const payload = ticket.getPayload();
+      const { access_token } = tokenResponse.data;
 
-      if (!payload) {
-        res.status(401).json({ message: "Invalid token" });
-        return;
-      }
+      const profileResponse = await axios.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
 
-      const { sub: googleId, email, name } = payload;
+      const payload = profileResponse.data;
+
+      const { id, email, name } = payload;
 
       let user = await User.findOne({ email });
 
       if (!user) {
         user = await User.create({
-          googleId,
+          googleId: id,
           email,
           nickname: name,
           isVerified: true,
@@ -68,8 +91,8 @@ class GoogleAuthController {
         accessToken,
       });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Google auth failed" });
+      console.error("Google OAuth failed: ", error);
+      res.status(500).json({ error: "Failed to authenticate with Google" });
     }
   };
 }

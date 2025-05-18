@@ -4,6 +4,6 @@ import GoogleAuthController from "../../controllers/GoogleAuthController";
 
 const router = Router();
 
-router.post("/google/token", GoogleAuthController.auth);
+router.post("/google/code", GoogleAuthController.authCode);
 
 export { router };
