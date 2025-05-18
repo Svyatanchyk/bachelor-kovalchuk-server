@@ -68,8 +68,6 @@ class OpenAiController {
         throw new Error("Unexpected response format from assistant.");
       }
 
-      console.log("Assistant Response:", messages.data[0].content[0]);
-
       const parsedValue = JSON.parse(assistantResponse.text.value);
 
       const user = await User.findById(req.user?.userId);

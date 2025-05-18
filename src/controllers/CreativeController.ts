@@ -13,8 +13,6 @@ interface AuthRequest extends Request {
 
 class CreativeController {
   saveCreatives = async (req: AuthRequest, res: Response) => {
-    console.log("Saving");
-
     try {
       const userId = req.user?.userId;
       let { creatives } = req.body;
@@ -72,8 +70,6 @@ class CreativeController {
       });
 
       await Promise.all(creativePromises);
-
-      console.log(savedCreatives);
 
       res.status(200).json({
         status: "SUCCESS",

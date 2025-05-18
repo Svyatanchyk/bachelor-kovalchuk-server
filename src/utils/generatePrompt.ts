@@ -4,8 +4,6 @@ export const generatePrompt = (
   country: string,
   language: string[]
 ) => {
-  console.log(language);
-
   const userMessage = `Generate exactly ${nText} short variations of text for a minimalist creative in the field of ${vertical}, targeting an audience in ${country}. You must use all the following languages ${language} in every variation. Each variation should be 5-8 words long, with a call to action. Do not include the country name in the text.
 
 For each variation, randomly choose the structure from the following:

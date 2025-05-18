@@ -66,12 +66,6 @@ class PaymentController {
       const userId = reference.split("_")[1];
       const tokensToAdd = parseInt(reference.split("_")[4]);
 
-      console.log("tokensToAdd: ", tokensToAdd);
-
-      console.log("UserId: ", userId);
-      console.log("Invoice Id: ", invoiceId);
-      console.log("Reference: ", reference);
-
       try {
         const updatedUser = await User.findByIdAndUpdate(
           userId,

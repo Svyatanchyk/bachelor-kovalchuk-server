@@ -17,7 +17,6 @@ export const sendVerificationEmail = async (
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("Message sent successfully:", info.messageId);
   } catch (error) {
     console.error("Error sending email:", error);
     throw new Error("Failed to send email");
@@ -41,7 +40,6 @@ export const sendResetPasswordEmail = async (
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("Message sent successfully:", info.messageId);
   } catch (error) {
     console.error("Password reset email failed:", error);
     throw new Error("Failed to send password reset email");
