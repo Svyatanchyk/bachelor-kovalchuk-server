@@ -7,8 +7,6 @@ class GoogleAuthController {
   authCode = async (req: Request, res: Response) => {
     const { code } = req.body;
 
-    console.log("Code: ", code);
-
     if (!code) {
       res.status(400).json({ error: "Missing authorization code" });
       return;
