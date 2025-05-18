@@ -16,6 +16,12 @@ router.get(
   CreativeController.getCreatives as RequestHandler
 );
 
+router.patch(
+  "/update/:creativeId",
+  authenticateToken,
+  CreativeController.updateCreative as RequestHandler
+);
+
 router.delete(
   "/delete/all",
   authenticateToken,

@@ -12,7 +12,9 @@ interface AuthRequest extends Request {
 }
 
 class CreativeController {
-  saveCreatives = async (req: AuthRequest, res: Response): Promise<void> => {
+  saveCreatives = async (req: AuthRequest, res: Response) => {
+    console.log("Saving");
+
     try {
       const userId = req.user?.userId;
       let { creatives } = req.body;
@@ -28,6 +30,8 @@ class CreativeController {
           .json({ error: "Creatives data is required and should be an array" });
         return;
       }
+
+      const savedCreatives: any[] = [];
 
       const creativePromises = creatives.map(async (crt: any) => {
         try {
@@ -59,7 +63,8 @@ class CreativeController {
             creative: crt,
           });
 
-          await newCreative.save();
+          const savedCreative = await newCreative.save();
+          savedCreatives.push(savedCreative);
         } catch (error) {
           console.error("Error saving creative:", error);
           throw new Error("Error saving a creative");
@@ -68,9 +73,13 @@ class CreativeController {
 
       await Promise.all(creativePromises);
 
-      res
-        .status(200)
-        .json({ status: "SUCCESS", message: "Creatives saved successfully" });
+      console.log(savedCreatives);
+
+      res.status(200).json({
+        status: "SUCCESS",
+        message: "Creatives saved successfully",
+        creatives: savedCreatives,
+      });
     } catch (error) {
       console.error("Error saving creatives:", error);
       res
@@ -79,7 +88,7 @@ class CreativeController {
     }
   };
 
-  getCreatives = async (req: AuthRequest, res: Response): Promise<void> => {
+  getCreatives = async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.userId;
 
@@ -112,7 +121,44 @@ class CreativeController {
     }
   };
 
-  deleteCreative = async (req: AuthRequest, res: Response): Promise<void> => {
+  updateCreative = async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+      const { creativeId } = req.params;
+      const { creative } = req.body;
+
+      if (!userId) {
+        res.status(401).json({ error: "User not authorized" });
+        return;
+      }
+
+      const updateCreative = await Creative.findByIdAndUpdate(
+        { _id: creativeId, userId },
+        { creative },
+        {
+          new: true,
+        }
+      );
+
+      if (!updateCreative) {
+        res.status(400).json({
+          status: "FAILED",
+          message: "Creative was not found",
+        });
+        return;
+      }
+
+      res.status(200).json({
+        status: "SUCCESS",
+        creative: updateCreative,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Error updading creative");
+    }
+  };
+
+  deleteCreative = async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.userId;
       const { creativeId } = req.params;
